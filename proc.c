@@ -212,6 +212,8 @@ fork(void)
   np->parent = curproc;
   *np->tf = *curproc->tf;
 
+  manage_fork(curproc, np);       //get shared pages in new processes address space 
+
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 

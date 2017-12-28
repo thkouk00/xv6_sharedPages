@@ -191,7 +191,7 @@ void 			shmeminit(void);
 void*			shmget(char* key);
 int				shmrem(char* key);
 int 			find_pos(void);
-void 			manage_fork(struct proc* p,int index);
+void 			manage_fork(struct proc* p,struct proc* c);
 
 
 // number of elements in fixed-size array

@@ -639,18 +639,31 @@ find_pos()
 }
 
 void
-manage_fork(struct proc *p,int index)
+manage_fork(struct proc *p,struct proc *c)
 {
-  int i;
+  int i ;
   for (i=0;i<SHMEM_PAGES;i++)
   {
-    if (sh_table.shp_array[i].shmem_addr == myproc()->phy_shared_page[index])
+    if (p->bitmap[i] == 1 && p->bitmap[i] != c->bitmap[i])
     {
-      sh_table.shp_array[i].shmem_counter++;
-      //pte_t *temp = walkpgdir(myproc()->pgdir, myproc()->vm_shared_page[index], 0);
-      cprintf("MANAGE FORK %d\n",sh_table.shp_array[i].shmem_counter);
+      if (mappages(c->pgdir, (void*)(KERNBASE-((i+1)*PGSIZE)), PGSIZE, V2P(p->phy_shared_page[i]), PTE_W|PTE_U)<0)
+        panic("Manage Fork\n");
+      c->phy_shared_page[i] = p->phy_shared_page[i];
+      c->vm_shared_page[i] = p->vm_shared_page[i];
+      memmove(c->p_key[i].keys, p->p_key[i].keys, sizeof(sh_key_t)*16);
+      c->bitmap[i] = 1;
+      int y;
+      for (y=0;y<SHMEM_PAGES;y++)
+      {
+        if (sh_table.shp_array[y].shmem_addr == c->phy_shared_page[i])
+          sh_table.shp_array[y].shmem_counter++;
+      }
     }
-  }
+
+  } 
+
+
+
 }
 //PAGEBREAK!
 // Blank page.
