@@ -407,8 +407,6 @@ typedef struct shm{
   key shp_key[SHMEM_PAGES];
 }shm_table;
 
-//shm_info shp_array[SHMEM_PAGES];
-//key shp_key[SHMEM_PAGES];
 shm_table sh_table;
 
 
@@ -430,7 +428,6 @@ shmeminit(void)
 void *
 shmget(sh_key_t *key)
 {
-  cprintf("SHMGET\n");
   acquire(&(sh_table.lock));
   
   int i;
@@ -440,14 +437,13 @@ shmget(sh_key_t *key)
 		if (*sh_table.shp_key[i].shmem_key == 0 && first_free_addr == -1)
 		{
       first_free_addr = i;
-      cprintf("FFF %d\n",first_free_addr);
 			continue;
 		}
 
 		if (strncmp(sh_table.shp_key[i].shmem_key, key, sizeof(sh_key_t)*16) == 0 )
 		{
-      char * temp = sh_table.shp_array[i].shmem_addr;
-			cprintf("HERE i =%d and %x , %d\n",i,(unsigned int)sh_table.shp_array[i].shmem_addr,*temp);
+      //char * temp = sh_table.shp_array[i].shmem_addr;
+			//cprintf("HERE i =%d and %x , %d\n",i,(unsigned int)sh_table.shp_array[i].shmem_addr,*temp);
 			break;
 		}
 	}
@@ -456,6 +452,12 @@ shmget(sh_key_t *key)
   int pos;
 	if (i<SHMEM_PAGES)
 	{
+    int y;
+    for (y=0;y<SHMEM_PAGES;y++)
+    {
+      if (strncmp(myproc()->p_key[y].keys, key, sizeof(sh_key_t)*16) == 0)    //ask for same page , same process
+        panic("Request for same page in process.\n");
+    }
 		if (sh_table.shp_array[i].shmem_counter < 16)
 		{
       pos = find_pos();
@@ -463,12 +465,11 @@ shmget(sh_key_t *key)
 			if ((mappages(myproc()->pgdir, myproc()->top, PGSIZE, V2P(sh_table.shp_array[i].shmem_addr), PTE_W|PTE_U))<0)
 				panic("Failed to map page.\n");
 			sh_table.shp_array[i].shmem_counter++;
-			cprintf("counter %d and pos %d\n",sh_table.shp_array[i].shmem_counter,i);
 			temp = myproc()->top;
       myproc()->bitmap[pos] = 1;
       myproc()->phy_shared_page[pos] = sh_table.shp_array[i].shmem_addr;
       myproc()->vm_shared_page[pos] = temp;
-      memmove(myproc()->p_key[first_free_addr].keys, key, strlen(key)); 
+      memmove(myproc()->p_key[pos].keys, key, strlen(key)); 
       
       release(&(sh_table.lock));
 			return temp;
@@ -485,24 +486,15 @@ shmget(sh_key_t *key)
 			panic("Full shared pages.\n");
 		if ((sh_table.shp_array[first_free_addr].shmem_addr = kalloc()) == 0)
 			panic("Failed to allocate.\n");
-    cprintf("KALLOC %x\n",sh_table.shp_array[first_free_addr].shmem_addr);
 		memset(sh_table.shp_array[first_free_addr].shmem_addr, 0, PGSIZE);
     pos = find_pos();
     myproc()->top = (void *)(KERNBASE-PGSIZE*(pos+1));
-    cprintf("POS %d and %x\n",pos,(unsigned int) myproc()->top);
 		if ((mappages(myproc()->pgdir, myproc()->top, PGSIZE, V2P(sh_table.shp_array[first_free_addr].shmem_addr), PTE_W|PTE_U))<0)
 			panic("Failed to map page.\n"); 
 
-    int y;
-    for (y=0;y<SHMEM_PAGES;y++)
-    {
-      if (myproc()->vm_shared_page[y] == 0)
-        break;
-    }
 		memmove(sh_table.shp_key[first_free_addr].shmem_key , key, strlen(key)); 
-    memmove(myproc()->p_key[y].keys, key, strlen(key)); 
+    memmove(myproc()->p_key[pos].keys, key, strlen(key)); 
 		sh_table.shp_array[first_free_addr].shmem_counter++;
-    cprintf("COUNTER %d\n",sh_table.shp_array[first_free_addr].shmem_counter);
 		temp = myproc()->top;
     myproc()->bitmap[pos] = 1;
     myproc()->phy_shared_page[pos] = sh_table.shp_array[first_free_addr].shmem_addr;
@@ -530,7 +522,6 @@ shmrem(sh_key_t *key)
     {
       if (myproc()->bitmap[i] == 1)
       {
-        cprintf("phy:%x vm:%x\n",(unsigned int) myproc()->phy_shared_page[i],(unsigned int) myproc()->vm_shared_page[i]);
         int y;
         for (y= 0;y<SHMEM_PAGES;y++)
         {
@@ -538,26 +529,19 @@ shmrem(sh_key_t *key)
           {
             if (sh_table.shp_array[y].shmem_counter == 1)
             {
-              cprintf("counter:%d addr %x pos %d\n",sh_table.shp_array[y].shmem_counter,sh_table.shp_array[y].shmem_addr,y);
               kfree(sh_table.shp_array[y].shmem_addr);
               sh_table.shp_array[y].shmem_counter = 0;
               sh_table.shp_array[y].shmem_addr = 0;
               memset(sh_table.shp_key[y].shmem_key,0,sizeof(sh_key_t)*16);
               myproc()->phy_shared_page[i] = 0;
               pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
-              // memset(temp, 0,PGSIZE);
               *temp = KERNBASE;
-              cprintf("IN HERE\n");
-              cprintf("PHY:%x VM:%x\n",(unsigned int) myproc()->phy_shared_page[i],(unsigned int) myproc()->vm_shared_page[i]);
             }
             else if (sh_table.shp_array[y].shmem_counter > 1)
             {
               sh_table.shp_array[y].shmem_counter--;
-              cprintf("edw %d\n",sh_table.shp_array[y].shmem_counter);
-              cprintf("%x\n",(unsigned int)myproc()->vm_shared_page[i]);
               myproc()->phy_shared_page[i] = 0;
               pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
-              //memset(temp, 0,PGSIZE);               //right
               *temp = KERNBASE;
             }
             else if (sh_table.shp_array[y].shmem_counter < 0)
@@ -575,31 +559,27 @@ shmrem(sh_key_t *key)
   }
 
 
-
   for (i=0;i<SHMEM_PAGES;i++)
   {
-    if (memcmp(sh_table.shp_key[i].shmem_key, key, sizeof(sh_key_t)*16) == 0 )
+    if (strncmp(sh_table.shp_key[i].shmem_key, key, sizeof(sh_key_t)*16) == 0 )
     {
+     
       int y;
       for (y=0;y<SHMEM_PAGES;y++)
       {
-        if (memcmp(myproc()->p_key[y].keys, key, sizeof(sh_key_t)*16) == 0 )
+        if (strncmp(myproc()->p_key[y].keys, key, sizeof(sh_key_t)*16) == 0 )
         {
-          cprintf("MPIKA\n");
           if (sh_table.shp_array[i].shmem_counter == 1)
           {
             kfree(sh_table.shp_array[i].shmem_addr);
             sh_table.shp_array[i].shmem_counter = 0;
             sh_table.shp_array[i].shmem_addr = 0;
             memset(sh_table.shp_key[i].shmem_key,0,sizeof(sh_key_t)*16);
-            //myproc()->phy_shared_page[i] = 0;
-            pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i],0);
+            pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
             *temp = KERNBASE;
+            myproc()->vm_shared_page[y] = 0;
+            myproc()->phy_shared_page[y] = 0;
 
-            cprintf("%x \n",(unsigned int) sh_table.shp_array[i].shmem_addr);
-
-            cprintf("KFREE EKANA\n");
-            
             release(&(sh_table.lock));
             return 0;
           }
@@ -607,13 +587,10 @@ shmrem(sh_key_t *key)
           {
             sh_table.shp_array[i].shmem_counter--;
             myproc()->phy_shared_page[y] = 0;
-            cprintf("AS %x %x\n",(unsigned int) sh_table.shp_array[i].shmem_addr,myproc()->phy_shared_page[y]);
-            myproc()->vm_shared_page[y] = 0;
-            cprintf("EDW counter %d\n",sh_table.shp_array[i].shmem_counter);
-            myproc()->phy_shared_page[i] = 0;
-            pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i],0);
+            pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
             *temp = KERNBASE;
-            
+            myproc()->vm_shared_page[y] = 0;
+            memset(myproc()->p_key[y].keys,0,sizeof(sh_key_t)*16);
             release(&(sh_table.lock));
             return 1;
           }
