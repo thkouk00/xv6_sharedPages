@@ -9,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+typedef struct sem sem_t;
 
 // bio.c
 void            binit(void);
@@ -155,8 +156,11 @@ int             argstr(int, char**);
 int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
-void *			shmget(char*);	//mine
-int 			shmrem(char*); 	//mine
+void *			shmget(char*);						//mine
+int 			shmrem(char*); 						//mine
+// void 			sem_init(sem_t *sem, int value);	//mine
+// void 			sem_up(sem_t *sem);					//mine
+// void 			sem_down(sem_t *sem);				//mine
 
 // timer.c
 void            timerinit(void);
@@ -193,6 +197,10 @@ int				shmrem(char* key);
 int 			find_pos(void);
 void 			manage_fork(struct proc* p,struct proc* c);
 
+//semaphores.c
+void 			sem_init(sem_t *sem, int value);
+void 			sem_up(sem_t *sem);
+void 			sem_down(sem_t *sem);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

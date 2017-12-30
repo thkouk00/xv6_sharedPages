@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "semaphores.h"
 
 int
 sys_fork(void)
@@ -16,7 +17,6 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  //shmrem("-1");
   exit();
   return 0;  // not reached
 }
@@ -110,3 +110,80 @@ sys_shmrem(void)  //mine
     return -1;
   return shmrem(key);
 }
+
+int
+sys_sem_init(void)
+{
+  sem_t *sem;
+  int value;
+  if (argptr(0, (char**)&sem, sizeof(sem)) < 0)
+    return -1;
+  
+  if(argint(1, &value) < 0)
+    return -1;
+  cprintf("sys %x %d\n",(unsigned int) sem,value);
+  
+  sem->maxval = value;
+  sem->value = value;
+  sem->lock = 0;
+  initlock(&(sem->lk), "sem lock");
+
+  //sem_init(sem,value);
+  return 1; //compiler complaining
+}
+
+int
+sys_sem_up(void)
+{
+  sem_t *sem;
+  if (argptr(0,(char**)&sem, sizeof(sem)) < 0)
+    return -1;
+  
+  if (sem->lock == 1)
+  {
+    acquire(&(sem->lk));
+    sem->value++;
+    sem->lock = 0;
+    release(&(sem->lk));
+    return 1;
+  }
+  // while(sem->lock == 0)
+  //   ;
+
+  //release(&(sem->lk));
+
+  //sem_up(sem);
+  return 1; //compiler complaining
+}
+
+int
+sys_sem_down(void)
+{
+  sem_t *sem;
+  if (argptr(0, (char**)&sem, sizeof(sem)) < 0)
+    return -1;
+  
+  // acquire(&(sem->lk));
+  if (sem->lock == 0)
+  {
+    acquire(&(sem->lk));
+    sem->lock = 1;
+    sem->value--;
+    release(&(sem->lk));
+  }
+  else
+  {
+    while(sem->lock == 1)
+    {
+      ;//cprintf("");
+    }  
+    // cprintf("WW\n");
+    acquire(&(sem->lk));
+    sem->lock = 1;
+    sem->value--;
+    release(&(sem->lk));
+  }
+  // sem_down(sem);
+  return 1; //compiler complaining
+}
+

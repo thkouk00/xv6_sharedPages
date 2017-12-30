@@ -29,5 +29,8 @@ SYSCALL(getpid)
 SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
-SYSCALL(shmget)	//mine
-SYSCALL(shmrem)	//mine
+SYSCALL(shmget)		//mine
+SYSCALL(shmrem)		//mine
+SYSCALL(sem_init)	//mine
+SYSCALL(sem_up)		//mine
+SYSCALL(sem_down)	//mine

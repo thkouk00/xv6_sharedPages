@@ -456,7 +456,11 @@ shmget(sh_key_t *key)
     for (y=0;y<SHMEM_PAGES;y++)
     {
       if (strncmp(myproc()->p_key[y].keys, key, sizeof(sh_key_t)*16) == 0)    //ask for same page , same process
-        panic("Request for same page in process.\n");
+      {
+        release(&(sh_table.lock));
+        return myproc()->vm_shared_page[y];
+        //panic("Request for same page in process.\n");
+      }
     }
 		if (sh_table.shp_array[i].shmem_counter < 16)
 		{
