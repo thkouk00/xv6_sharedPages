@@ -16,17 +16,19 @@ main(int argc,char *argv[])
 	writers = (sem_t *)h;
 	char *p;
 	p = h+sizeof(writers);
-	sem_init(writers, 1);
+	sem_init(writers,2);
 	pid = fork();
 	sleep(1);
 	if (pid)
 	{	
-		wait();
+		//wait();
 		sem_down(writers);
 		p[0] = 'A';
 		p[1] = 'D';
 		p[2] = 'C';
 		//sem_up(writers);
+		//wait();
+		//sem_down(writers);
 		printf(1,"Parent %c %c %c %x\n",p[0],p[1],p[2],(unsigned int) p);
 		printf(1,"ParentAfter %c %c %c %x\n",p[0],p[1],p[2],(unsigned int) p);
 		//sem_down(writers);

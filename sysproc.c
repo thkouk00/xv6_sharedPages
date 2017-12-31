@@ -121,14 +121,8 @@ sys_sem_init(void)
   
   if(argint(1, &value) < 0)
     return -1;
-  cprintf("sys %x %d\n",(unsigned int) sem,value);
   
-  sem->maxval = value;
-  sem->value = value;
-  sem->lock = 0;
-  initlock(&(sem->lk), "sem lock");
-
-  //sem_init(sem,value);
+  sem_init(sem,value);
   return 1; //compiler complaining
 }
 
@@ -139,20 +133,7 @@ sys_sem_up(void)
   if (argptr(0,(char**)&sem, sizeof(sem)) < 0)
     return -1;
   
-  if (sem->lock == 1)
-  {
-    acquire(&(sem->lk));
-    sem->value++;
-    sem->lock = 0;
-    release(&(sem->lk));
-    return 1;
-  }
-  // while(sem->lock == 0)
-  //   ;
-
-  //release(&(sem->lk));
-
-  //sem_up(sem);
+  sem_up(sem);
   return 1; //compiler complaining
 }
 
@@ -163,27 +144,30 @@ sys_sem_down(void)
   if (argptr(0, (char**)&sem, sizeof(sem)) < 0)
     return -1;
   
-  // acquire(&(sem->lk));
-  if (sem->lock == 0)
-  {
-    acquire(&(sem->lk));
-    sem->lock = 1;
-    sem->value--;
-    release(&(sem->lk));
-  }
-  else
-  {
-    while(sem->lock == 1)
-    {
-      ;//cprintf("");
-    }  
-    // cprintf("WW\n");
-    acquire(&(sem->lk));
-    sem->lock = 1;
-    sem->value--;
-    release(&(sem->lk));
-  }
-  // sem_down(sem);
+  sem_down(sem);
   return 1; //compiler complaining
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

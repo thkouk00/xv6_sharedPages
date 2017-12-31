@@ -7,5 +7,5 @@ typedef struct sem{
 	struct spinlock lk;		// spinlock
 	int value;				// value to set semaphore to
 	int maxval;
-	int lock;
+	int locked;
 }sem_t;

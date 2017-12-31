@@ -425,6 +425,7 @@ shmeminit(void)
   release(&(sh_table.lock));
 }
 
+//na ftiaxw to orisma simfwna me auta poy theloun me typedef
 void *
 shmget(sh_key_t *key)
 {
