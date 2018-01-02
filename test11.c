@@ -44,6 +44,5 @@ main(int argc,char *argv[])
 		printf(1,"Child %c %c %c %x\n",p[0],p[1],p[2],(unsigned int) p);
 		sem_up(writers);
 	}
-
 	exit();	
 }
