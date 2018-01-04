@@ -34,10 +34,10 @@ struct context {
 
 enum procstate { UNUSED, EMBRYO, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
-typedef char sh_key_t;          //For Shared Pages
+typedef char* sh_key_t;          //For Shared Pages
 typedef struct pstruct
 {
-  sh_key_t keys[16]; 
+  char keys[16]; 
 }pkeys;
 
 

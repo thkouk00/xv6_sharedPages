@@ -1,6 +1,7 @@
 struct stat;
 struct rtcdate;
 typedef struct sem sem_t;
+typedef char* sh_key_t;
 
 // system calls
 int fork(void);
@@ -24,11 +25,12 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-void* shmget(char*);
-int shmrem(char*);
+void* shmget(sh_key_t);
+int shmrem(sh_key_t);
 void sem_init(sem_t *sem,int value);
 void sem_up(sem_t *sem);
 void sem_down(sem_t *sem);
+int isActive(sem_t *sem);
 
 // ulib.c
 int stat(char*, struct stat*);

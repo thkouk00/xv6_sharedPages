@@ -386,267 +386,267 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 }
 
 
-#define SHMEM_PAGES 32
-#define MAX_PROC 16
+// #define SHMEM_PAGES 32
+// #define MAX_PROC 16
 
-typedef char sh_key_t;
+// typedef char* sh_key_t;
 
-typedef struct shm_key{
-	sh_key_t shmem_key[MAX_PROC];
-}key; 
+// typedef struct shm_key{
+// 	char shmem_key[MAX_PROC];
+// }key; 
 
-typedef struct shmem_pinfo{
-	void *shmem_addr;
-	int shmem_counter;
-}shm_info;
-
-
-typedef struct shm{
-  struct spinlock lock;
-  shm_info shp_array[SHMEM_PAGES];
-  key shp_key[SHMEM_PAGES];
-}shm_table;
-
-shm_table sh_table;
+// typedef struct shmem_pinfo{
+// 	void *shmem_addr;
+// 	int shmem_counter;
+// }shm_info;
 
 
-void
-shmeminit(void)
-{
-	int i ;
-  initlock(&(sh_table.lock), "SHMEM");
-  acquire(&(sh_table.lock));
-	for (i=0; i<SHMEM_PAGES; i++)
-	{
-		sh_table.shp_array[i].shmem_counter = 0;
-		sh_table.shp_array[i].shmem_addr = 0;
-		memset(sh_table.shp_key[i].shmem_key,0,sizeof(sh_key_t)*16);
-	}
-  release(&(sh_table.lock));
-}
+// typedef struct shm{
+//   struct spinlock lock;
+//   shm_info shp_array[SHMEM_PAGES];
+//   key shp_key[SHMEM_PAGES];
+// }shm_table;
 
-//na ftiaxw to orisma simfwna me auta poy theloun me typedef
-void *
-shmget(sh_key_t *key)
-{
-  acquire(&(sh_table.lock));
+// shm_table sh_table;
+
+
+// void
+// shmeminit(void)
+// {
+// 	int i ;
+//   initlock(&(sh_table.lock), "SHMEM");
+//   acquire(&(sh_table.lock));
+// 	for (i=0; i<SHMEM_PAGES; i++)
+// 	{
+// 		sh_table.shp_array[i].shmem_counter = 0;
+// 		sh_table.shp_array[i].shmem_addr = 0;
+// 		memset(sh_table.shp_key[i].shmem_key,0,sizeof(char)*16);
+// 	}
+//   release(&(sh_table.lock));
+// }
+
+// void *
+// shmget(sh_key_t key)
+// {
+//   acquire(&(sh_table.lock));
   
-  int i;
-	int first_free_addr = -1;
-	for (i=0;i<SHMEM_PAGES;i++)
-	{
-		if (*sh_table.shp_key[i].shmem_key == 0 && first_free_addr == -1)
-		{
-      first_free_addr = i;
-			continue;
-		}
+//   int i;
+// 	int first_free_addr = -1;
+// 	for (i=0;i<SHMEM_PAGES;i++)
+// 	{
+// 		if (*sh_table.shp_key[i].shmem_key == 0 && first_free_addr == -1)
+// 		{
+//       first_free_addr = i;
+// 			continue;
+// 		}
 
-		if (strncmp(sh_table.shp_key[i].shmem_key, key, sizeof(sh_key_t)*16) == 0 )
-		{
-      //char * temp = sh_table.shp_array[i].shmem_addr;
-			//cprintf("HERE i =%d and %x , %d\n",i,(unsigned int)sh_table.shp_array[i].shmem_addr,*temp);
-			break;
-		}
-	}
+// 		if (strncmp(sh_table.shp_key[i].shmem_key, key, sizeof(char)*16) == 0 )
+// 		{
+//       //char * temp = sh_table.shp_array[i].shmem_addr;
+// 			//cprintf("HERE i =%d and %x , %d\n",i,(unsigned int)sh_table.shp_array[i].shmem_addr,*temp);
+// 			break;
+// 		}
+// 	}
 	
-	void * temp;
-  int pos;
-	if (i<SHMEM_PAGES)
-	{
-    int y;
-    for (y=0;y<SHMEM_PAGES;y++)
-    {
-      if (strncmp(myproc()->p_key[y].keys, key, sizeof(sh_key_t)*16) == 0)    //ask for same page , same process
-      {
-        release(&(sh_table.lock));
-        return myproc()->vm_shared_page[y];
-        //panic("Request for same page in process.\n");
-      }
-    }
-		if (sh_table.shp_array[i].shmem_counter < 16)
-		{
-      pos = find_pos();
-      myproc()->top = (void *)(KERNBASE-PGSIZE*(pos+1));
-			if ((mappages(myproc()->pgdir, myproc()->top, PGSIZE, V2P(sh_table.shp_array[i].shmem_addr), PTE_W|PTE_U))<0)
-				panic("Failed to map page.\n");
-			sh_table.shp_array[i].shmem_counter++;
-			temp = myproc()->top;
-      myproc()->bitmap[pos] = 1;
-      myproc()->phy_shared_page[pos] = sh_table.shp_array[i].shmem_addr;
-      myproc()->vm_shared_page[pos] = temp;
-      memmove(myproc()->p_key[pos].keys, key, strlen(key)); 
+// 	void * temp;
+//   int pos;
+// 	if (i<SHMEM_PAGES)
+// 	{
+//     int y;
+//     for (y=0;y<SHMEM_PAGES;y++)
+//     {
+//       if (strncmp(myproc()->p_key[y].keys, key, sizeof(char)*16) == 0)    //ask for same page , same process
+//       {
+//         release(&(sh_table.lock));
+//         return myproc()->vm_shared_page[y];
+//         //panic("Request for same page in process.\n");
+//       }
+//     }
+// 		if (sh_table.shp_array[i].shmem_counter < 16)
+// 		{
+//       pos = find_pos();
+//       myproc()->top = (void *)(KERNBASE-PGSIZE*(pos+1));
+// 			if ((mappages(myproc()->pgdir, myproc()->top, PGSIZE, V2P(sh_table.shp_array[i].shmem_addr), PTE_W|PTE_U))<0)
+// 				panic("Failed to map page.\n");
+// 			sh_table.shp_array[i].shmem_counter++;
+//       //cprintf("COUNTER %d\n",sh_table.shp_array[i].shmem_counter);
+// 			temp = myproc()->top;
+//       myproc()->bitmap[pos] = 1;
+//       myproc()->phy_shared_page[pos] = sh_table.shp_array[i].shmem_addr;
+//       myproc()->vm_shared_page[pos] = temp;
+//       memmove(myproc()->p_key[pos].keys, key, strlen(key)); 
       
-      release(&(sh_table.lock));
-			return temp;
-		}
-		else
-    {
-      release(&(sh_table.lock));
-			panic("Max processes.\n");
-    }
-	}
-	else
-	{
-		if (first_free_addr == -1)
-			panic("Full shared pages.\n");
-		if ((sh_table.shp_array[first_free_addr].shmem_addr = kalloc()) == 0)
-			panic("Failed to allocate.\n");
-		memset(sh_table.shp_array[first_free_addr].shmem_addr, 0, PGSIZE);
-    pos = find_pos();
-    myproc()->top = (void *)(KERNBASE-PGSIZE*(pos+1));
-		if ((mappages(myproc()->pgdir, myproc()->top, PGSIZE, V2P(sh_table.shp_array[first_free_addr].shmem_addr), PTE_W|PTE_U))<0)
-			panic("Failed to map page.\n"); 
+//       release(&(sh_table.lock));
+// 			return temp;
+// 		}
+// 		else
+//     {
+//       release(&(sh_table.lock));
+// 			panic("Max processes.\n");
+//     }
+// 	}
+// 	else
+// 	{
+// 		if (first_free_addr == -1)
+// 			panic("Full shared pages.\n");
+// 		if ((sh_table.shp_array[first_free_addr].shmem_addr = kalloc()) == 0)
+// 			panic("Failed to allocate.\n");
+// 		memset(sh_table.shp_array[first_free_addr].shmem_addr, 0, PGSIZE);
+//     pos = find_pos();
+//     myproc()->top = (void *)(KERNBASE-PGSIZE*(pos+1));
+// 		if ((mappages(myproc()->pgdir, myproc()->top, PGSIZE, V2P(sh_table.shp_array[first_free_addr].shmem_addr), PTE_W|PTE_U))<0)
+// 			panic("Failed to map page.\n"); 
 
-		memmove(sh_table.shp_key[first_free_addr].shmem_key , key, strlen(key)); 
-    memmove(myproc()->p_key[pos].keys, key, strlen(key)); 
-		sh_table.shp_array[first_free_addr].shmem_counter++;
-		temp = myproc()->top;
-    myproc()->bitmap[pos] = 1;
-    myproc()->phy_shared_page[pos] = sh_table.shp_array[first_free_addr].shmem_addr;
-    myproc()->vm_shared_page[pos] = temp;
+// 		memmove(sh_table.shp_key[first_free_addr].shmem_key , key, strlen(key)); 
+//     memmove(myproc()->p_key[pos].keys, key, strlen(key)); 
+// 		sh_table.shp_array[first_free_addr].shmem_counter++;
+// 		temp = myproc()->top;
+//     myproc()->bitmap[pos] = 1;
+//     myproc()->phy_shared_page[pos] = sh_table.shp_array[first_free_addr].shmem_addr;
+//     myproc()->vm_shared_page[pos] = temp;
 
-    release(&(sh_table.lock));
-		return temp;
-	}
+//     release(&(sh_table.lock));
+// 		return temp;
+// 	}
 
-	return (void *) 0xffffffff;					//Error
-}
-
-
+// 	return (void *) 0xffffffff;					//Error
+// }
 
 
-int
-shmrem(sh_key_t *key)
-{
-  int i;
-  acquire(&(sh_table.lock));
+
+
+// int
+// shmrem(sh_key_t key) //na ftiaxv ti epistrefei opos to theloun
+// {
+//   int i;
+//   acquire(&(sh_table.lock));
   
-  if (memcmp(key, "-1",sizeof(sh_key_t)*16) == 0 )
-  {
-    for (i=0;i<SHMEM_PAGES;i++)
-    {
-      if (myproc()->bitmap[i] == 1)
-      {
-        int y;
-        for (y= 0;y<SHMEM_PAGES;y++)
-        {
-          if (myproc()->phy_shared_page[i] == sh_table.shp_array[y].shmem_addr)
-          {
-            if (sh_table.shp_array[y].shmem_counter == 1)
-            {
-              kfree(sh_table.shp_array[y].shmem_addr);
-              sh_table.shp_array[y].shmem_counter = 0;
-              sh_table.shp_array[y].shmem_addr = 0;
-              memset(sh_table.shp_key[y].shmem_key,0,sizeof(sh_key_t)*16);
-              myproc()->phy_shared_page[i] = 0;
-              pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
-              *temp = KERNBASE;
-            }
-            else if (sh_table.shp_array[y].shmem_counter > 1)
-            {
-              sh_table.shp_array[y].shmem_counter--;
-              myproc()->phy_shared_page[i] = 0;
-              pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
-              *temp = KERNBASE;
-            }
-            else if (sh_table.shp_array[y].shmem_counter < 0)
-            {
-              release(&(sh_table.lock));
-              panic("ERROR negative counter %d\n");
-              return -1;
-            }
-          }
-        }
-      }
-    }
-    release(&(sh_table.lock));
-    return 1;
-  }
+//   if (memcmp(key, "-1",sizeof(char)*16) == 0 )
+//   {
+//     for (i=0;i<SHMEM_PAGES;i++)
+//     {
+//       if (myproc()->bitmap[i] == 1)
+//       {
+//         int y;
+//         for (y= 0;y<SHMEM_PAGES;y++)
+//         {
+//           if (myproc()->phy_shared_page[i] == sh_table.shp_array[y].shmem_addr)
+//           {
+//             if (sh_table.shp_array[y].shmem_counter == 1)
+//             {
+//               kfree(sh_table.shp_array[y].shmem_addr);
+//               sh_table.shp_array[y].shmem_counter = 0;
+//               sh_table.shp_array[y].shmem_addr = 0;
+//               memset(sh_table.shp_key[y].shmem_key,0,sizeof(char)*16);
+//               myproc()->phy_shared_page[i] = 0;
+//               pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
+//               *temp = KERNBASE;
+//             }
+//             else if (sh_table.shp_array[y].shmem_counter > 1)
+//             {
+//               sh_table.shp_array[y].shmem_counter--;
+//               myproc()->phy_shared_page[i] = 0;
+//               pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
+//               *temp = KERNBASE;
+//             }
+//             else if (sh_table.shp_array[y].shmem_counter < 0)
+//             {
+//               release(&(sh_table.lock));
+//               panic("ERROR negative counter %d\n");
+//               return -1;
+//             }
+//           }
+//         }
+//       }
+//     }
+//     release(&(sh_table.lock));
+//     return 1;
+//   }
 
 
-  for (i=0;i<SHMEM_PAGES;i++)
-  {
-    if (strncmp(sh_table.shp_key[i].shmem_key, key, sizeof(sh_key_t)*16) == 0 )
-    {
+//   for (i=0;i<SHMEM_PAGES;i++)
+//   {
+//     if (strncmp(sh_table.shp_key[i].shmem_key, key, sizeof(char)*16) == 0 )
+//     {
      
-      int y;
-      for (y=0;y<SHMEM_PAGES;y++)
-      {
-        if (strncmp(myproc()->p_key[y].keys, key, sizeof(sh_key_t)*16) == 0 )
-        {
-          if (sh_table.shp_array[i].shmem_counter == 1)
-          {
-            kfree(sh_table.shp_array[i].shmem_addr);
-            sh_table.shp_array[i].shmem_counter = 0;
-            sh_table.shp_array[i].shmem_addr = 0;
-            memset(sh_table.shp_key[i].shmem_key,0,sizeof(sh_key_t)*16);
-            pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
-            *temp = KERNBASE;
-            myproc()->vm_shared_page[y] = 0;
-            myproc()->phy_shared_page[y] = 0;
+//       int y;
+//       for (y=0;y<SHMEM_PAGES;y++)
+//       {
+//         if (strncmp(myproc()->p_key[y].keys, key, sizeof(char)*16) == 0 )
+//         {
+//           if (sh_table.shp_array[i].shmem_counter == 1)
+//           {
+//             kfree(sh_table.shp_array[i].shmem_addr);
+//             sh_table.shp_array[i].shmem_counter = 0;
+//             sh_table.shp_array[i].shmem_addr = 0;
+//             memset(sh_table.shp_key[i].shmem_key,0,sizeof(char)*16);
+//             pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
+//             *temp = KERNBASE;
+//             myproc()->vm_shared_page[y] = 0;
+//             myproc()->phy_shared_page[y] = 0;
 
-            release(&(sh_table.lock));
-            return 0;
-          }
-          else
-          {
-            sh_table.shp_array[i].shmem_counter--;
-            myproc()->phy_shared_page[y] = 0;
-            pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
-            *temp = KERNBASE;
-            myproc()->vm_shared_page[y] = 0;
-            memset(myproc()->p_key[y].keys,0,sizeof(sh_key_t)*16);
-            release(&(sh_table.lock));
-            return 1;
-          }
-        }
-      }
-    }
-  }
-  release(&(sh_table.lock));
-  return -1;
-}
-
-
-int 
-find_pos()
-{
-  int i;
-  for (i=0;i<SHMEM_PAGES;i++)
-  {
-    if (myproc()->phy_shared_page[i] == 0)
-      return i;
-  }
-  return -1;
-}
-
-void
-manage_fork(struct proc *p,struct proc *c)
-{
-  int i ;
-  for (i=0;i<SHMEM_PAGES;i++)
-  {
-    if (p->bitmap[i] == 1 && p->bitmap[i] != c->bitmap[i])
-    {
-      if (mappages(c->pgdir, (void*)(KERNBASE-((i+1)*PGSIZE)), PGSIZE, V2P(p->phy_shared_page[i]), PTE_W|PTE_U)<0)
-        panic("Manage Fork\n");
-      c->phy_shared_page[i] = p->phy_shared_page[i];
-      c->vm_shared_page[i] = p->vm_shared_page[i];
-      memmove(c->p_key[i].keys, p->p_key[i].keys, sizeof(sh_key_t)*16);
-      c->bitmap[i] = 1;
-      int y;
-      for (y=0;y<SHMEM_PAGES;y++)
-      {
-        if (sh_table.shp_array[y].shmem_addr == c->phy_shared_page[i])
-          sh_table.shp_array[y].shmem_counter++;
-      }
-    }
-
-  } 
+//             release(&(sh_table.lock));
+//             return 0;
+//           }
+//           else
+//           {
+//             sh_table.shp_array[i].shmem_counter--;
+//             myproc()->phy_shared_page[y] = 0;
+//             pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
+//             *temp = KERNBASE;
+//             myproc()->vm_shared_page[y] = 0;
+//             memset(myproc()->p_key[y].keys,0,sizeof(char)*16);
+//             release(&(sh_table.lock));
+//             return 1;
+//           }
+//         }
+//       }
+//     }
+//   }
+//   release(&(sh_table.lock));
+//   return -1;
+// }
 
 
+// int 
+// find_pos()
+// {
+//   int i;
+//   for (i=0;i<SHMEM_PAGES;i++)
+//   {
+//     if (myproc()->phy_shared_page[i] == 0)
+//       return i;
+//   }
+//   return -1;
+// }
 
-}
+// void
+// manage_fork(struct proc *p,struct proc *c)
+// {
+//   int i,y;
+//   for (i=0;i<SHMEM_PAGES;i++)
+//   {
+//     if (p->bitmap[i] == 1 && p->bitmap[i] != c->bitmap[i])
+//     {
+//       if (mappages(c->pgdir, (void*)(KERNBASE-((i+1)*PGSIZE)), PGSIZE, V2P(p->phy_shared_page[i]), PTE_W|PTE_U)<0)
+//         panic("Manage Fork\n");
+//       c->phy_shared_page[i] = p->phy_shared_page[i];
+//       c->vm_shared_page[i] = p->vm_shared_page[i];
+//       memmove(c->p_key[i].keys, p->p_key[i].keys, sizeof(char)*16);
+//       c->bitmap[i] = 1;
+//       for (y=0;y<SHMEM_PAGES;y++)
+//       {
+//         if (sh_table.shp_array[y].shmem_addr == c->phy_shared_page[i])
+//         {
+//           sh_table.shp_array[y].shmem_counter++;
+//           break; //mallon
+//         }
+//       }
+//     }
+//   } 
+// }
+
+
 //PAGEBREAK!
 // Blank page.
 //PAGEBREAK!

@@ -148,6 +148,17 @@ sys_sem_down(void)
   return 1; //compiler complaining
 }
 
+int 
+sys_isActive(void)
+{
+  sem_t *sem;
+  if (argptr(0, (char**)&sem, sizeof(sem)) < 0)
+    return -1;
+  
+  return isActive(sem);
+  
+}
+
 
 
 

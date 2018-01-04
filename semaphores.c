@@ -10,20 +10,23 @@
 
 
 void
-sem_init(sem_t *sem,int value)
+sem_init(sem_t *sem,int value)	//initialize semaphores structure
 {
-	//sem->maxval = value;
+	sem->maxval = value;
   	sem->value = value;
+	sem->isactive = 0;
   	sem->locked = 0;
   	initlock(&(sem->lk), "sem lock");
 }
 
 void
-sem_up(sem_t *sem)
+sem_up(sem_t *sem)				//increase semaphore and wakes up sleeping procs if exist
 {
 	
 	acquire(&(sem->lk));
 	sem->value++;
+	if (sem->value == sem->maxval)
+		sem->isactive = 0;
 	sem->locked = 0;
 	wakeup(sem);
 	release(&(sem->lk));
@@ -31,36 +34,38 @@ sem_up(sem_t *sem)
 }
 
 void 
-sem_down(sem_t *sem)
+sem_down(sem_t *sem)			//decrease semaphore , if locked == 1 sleep 
 {
-	//acquire(&(sem->lk));
+	acquire(&(sem->lk));
 	if (!sem->locked)		// if unlocked
 	{
-		acquire(&(sem->lk));
+		//acquire(&(sem->lk));
 		if (sem->value == 1)
-		{
 	  		sem->locked = 1;
-	  		//cprintf("sem down lock\n");
-		}
 		sem->value--;
-		//cprintf("value %d\n",sem->value);
-		release(&(sem->lk));
+		sem->isactive = 1;
+		//release(&(sem->lk));
 	}
-	else						// if locked
+	else					// if locked
 	{
-		acquire(&(sem->lk));
-		//cprintf("EDV %d\n",sem->locked);
+		//acquire(&(sem->lk));
 		while(sem->locked)
-		{
     		sleep(sem, &(sem->lk));
-		}
 		if (sem->value == 1)
 	  		sem->locked = 1;
 	  	else
 	  		sem->locked = 0;
 		sem->value--;
-		release(&(sem->lk));
+		sem->isactive = 1;
+		//release(&(sem->lk));
 	}
+	release(&(sem->lk));
+}
+
+int
+isActive(sem_t *sem)
+{
+	return (sem->isactive == 1) ? 1 : 0 ;
 }
 
 

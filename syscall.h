@@ -25,4 +25,5 @@
 #define SYS_sem_init  24
 #define SYS_sem_up  25
 #define SYS_sem_down  26
+#define SYS_isActive  27
 

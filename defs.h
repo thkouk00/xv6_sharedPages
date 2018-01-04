@@ -10,6 +10,7 @@ struct sleeplock;
 struct stat;
 struct superblock;
 typedef struct sem sem_t;
+typedef char* sh_key_t;
 
 // bio.c
 void            binit(void);
@@ -192,8 +193,8 @@ void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
 void 			shmeminit(void);
-void*			shmget(char* key);
-int				shmrem(char* key);
+void*			shmget(sh_key_t key);
+int				shmrem(sh_key_t key);
 int 			find_pos(void);
 void 			manage_fork(struct proc* p,struct proc* c);
 
@@ -201,6 +202,7 @@ void 			manage_fork(struct proc* p,struct proc* c);
 void 			sem_init(sem_t *sem, int value);
 void 			sem_up(sem_t *sem);
 void 			sem_down(sem_t *sem);
+int 			isActive(sem_t *sem);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

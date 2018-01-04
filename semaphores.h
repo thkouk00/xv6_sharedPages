@@ -6,6 +6,7 @@
 typedef struct sem{
 	struct spinlock lk;		// spinlock
 	int value;				// value to set semaphore to
-	//int maxval;
+	int maxval;
+	int isactive;
 	int locked;
 }sem_t;

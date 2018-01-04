@@ -120,7 +120,7 @@ found:
     p->phy_shared_page[i] = 0;
     p->vm_shared_page[i] = 0;
     p->bitmap[i] = 0;
-    memset(p->p_key[i].keys,0,sizeof(sh_key_t)*16);
+    memset(p->p_key[i].keys,0,sizeof(char)*16);
   }
   //p->top = (void *)(KERNBASE - PGSIZE); 
 
