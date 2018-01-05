@@ -5,8 +5,6 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "semaphores.h"
-//#include "proc.h"
-
 
 
 void
@@ -37,7 +35,7 @@ void
 sem_down(sem_t *sem)			//decrease semaphore , if locked == 1 sleep 
 {
 	acquire(&(sem->lk));
-	if (!sem->locked)		// if unlocked
+	if (!sem->locked)			// if unlocked
 	{
 		//acquire(&(sem->lk));
 		if (sem->value == 1)
@@ -46,7 +44,7 @@ sem_down(sem_t *sem)			//decrease semaphore , if locked == 1 sleep
 		sem->isactive = 1;
 		//release(&(sem->lk));
 	}
-	else					// if locked
+	else						// if locked
 	{
 		//acquire(&(sem->lk));
 		while(sem->locked)

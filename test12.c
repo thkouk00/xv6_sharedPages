@@ -22,6 +22,7 @@ main(int argc,char *argv[])
 	p[2] = 'C';
 	p[3] = 'D';
 	pid = fork();
+	//pid = fork();
 	if (pid)
 	{
 		wait();
@@ -32,7 +33,7 @@ main(int argc,char *argv[])
 			temp1[i] = p[i];
 		sem_up(readers);
 		
-		wait();
+
 		while (isActive(writers) || isActive(readers))
 			continue;
 		sem_down(writers);
@@ -58,7 +59,5 @@ main(int argc,char *argv[])
 		sem_up(writers);
 	}
 
-	if (pid)
-		wait();
 	exit();	
 }

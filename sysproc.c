@@ -91,8 +91,10 @@ sys_uptime(void)
   return xticks;
 }
 
+//parsing arguments for syscalls / Project Shared_Pages - Semaphores
+
 int 
-sys_shmget(void)  //mine
+sys_shmget(void)  
 {
   char *key; 
   int temp = argstr(0, &key);
@@ -102,7 +104,7 @@ sys_shmget(void)  //mine
 }
 
 int 
-sys_shmrem(void)  //mine
+sys_shmrem(void)  
 {
   char *key; 
   int temp = argstr(0, &key);
@@ -123,7 +125,7 @@ sys_sem_init(void)
     return -1;
   
   sem_init(sem,value);
-  return 1; //compiler complaining
+  return 1; 
 }
 
 int
@@ -134,7 +136,7 @@ sys_sem_up(void)
     return -1;
   
   sem_up(sem);
-  return 1; //compiler complaining
+  return 1; 
 }
 
 int
@@ -145,7 +147,7 @@ sys_sem_down(void)
     return -1;
   
   sem_down(sem);
-  return 1; //compiler complaining
+  return 1; 
 }
 
 int 

@@ -266,7 +266,7 @@ shmrem(sh_key_t key) //na ftiaxv ti epistrefei opos to theloun
             myproc()->phy_shared_page[y] = 0;
 
             release(&(sh_table.lock));
-            return 0;
+            return 0;                   // last process for the shared page , return 0 
           }
           else
           {

@@ -212,7 +212,7 @@ fork(void)
   np->parent = curproc;
   *np->tf = *curproc->tf;
 
-  manage_fork(curproc, np);       //get shared pages in new processes address space 
+  manage_fork(curproc, np);       //get shared pages in new procs AS 
 
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
@@ -248,8 +248,6 @@ exit(void)
   if(curproc == initproc)
     panic("init exiting");
   
-  // shmrem("-1");
-
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
     if(curproc->ofile[fd]){
@@ -258,7 +256,7 @@ exit(void)
     }
   }
   
-  shmrem("-1");
+  shmrem("-1");           // call function to remove shared page from AS
 
   begin_op();
   iput(curproc->cwd);
