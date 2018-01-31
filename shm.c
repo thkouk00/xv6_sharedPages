@@ -151,14 +151,16 @@ shmget(sh_key_t key)
 		else
     {
       release(&(sh_table.lock));
-			panic("Max processes.\n");
+			panic("Max processes.\n"); 
     }
 	}
 	else   //if key does not exist
 	{
 		if (first_free_addr == -1) //check if table is full
     { 
-			panic("Full shared pages.\n");
+      //panic("Full shared pages.\n");
+			cprintf("Full shared pages.\n");
+      exit();
     }
     //allocate page
 		if ((sh_table.shp_array[first_free_addr].shmem_addr = kalloc()) == 0)
@@ -190,7 +192,7 @@ shmget(sh_key_t key)
 
 
 int
-shmrem(sh_key_t key) //na ftiaxv ti epistrefei opos to theloun
+shmrem(sh_key_t key) 
 {
   int i;
   acquire(&(sh_table.lock));
@@ -218,14 +220,16 @@ shmrem(sh_key_t key) //na ftiaxv ti epistrefei opos to theloun
               myproc()->phy_shared_page[i] = 0;
               //find the address of page in AS and set it to Kernbase
               pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
-              *temp = KERNBASE;
+              //*temp = KERNBASE;
+              *temp = 0;
             }
             else if (sh_table.shp_array[y].shmem_counter > 1)
             {
               sh_table.shp_array[y].shmem_counter--;
               myproc()->phy_shared_page[i] = 0;
               pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[i] , 0);
-              *temp = KERNBASE;
+              //*temp = KERNBASE;
+              *temp = 0;
             }
             else if (sh_table.shp_array[y].shmem_counter < 0)
             {
@@ -261,7 +265,8 @@ shmrem(sh_key_t key) //na ftiaxv ti epistrefei opos to theloun
             sh_table.shp_array[i].shmem_addr = 0;
             memset(sh_table.shp_key[i].shmem_key,0,sizeof(char)*16);
             pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
-            *temp = KERNBASE;
+            //*temp = KERNBASE;
+            *temp = 0;
             myproc()->vm_shared_page[y] = 0;
             myproc()->phy_shared_page[y] = 0;
 
@@ -273,7 +278,8 @@ shmrem(sh_key_t key) //na ftiaxv ti epistrefei opos to theloun
             sh_table.shp_array[i].shmem_counter--;
             myproc()->phy_shared_page[y] = 0;
             pte_t *temp=walkpgdir(myproc()->pgdir,myproc()->vm_shared_page[y],0);
-            *temp = KERNBASE;
+            //*temp = KERNBASE;
+            *temp = 0;
             myproc()->vm_shared_page[y] = 0;
             memset(myproc()->p_key[y].keys,0,sizeof(char)*16);
             release(&(sh_table.lock));
@@ -322,6 +328,12 @@ manage_fork(struct proc *p,struct proc *c)
       {
         if (sh_table.shp_array[y].shmem_addr == c->phy_shared_page[i])
         {
+          if (sh_table.shp_array[y].shmem_counter == 16)
+          {
+            //panic("Fork - Max process for shared page!\n");
+            cprintf("Fork - Max process for shared page!\n");
+            exit();
+          }
           //increase page counter
           sh_table.shp_array[y].shmem_counter++;
           break; 

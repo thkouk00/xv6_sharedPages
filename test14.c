@@ -17,14 +17,14 @@ main(int argc,char *argv[])
 	// pid = fork();
 	// pid = fork();
 	// pid = fork();
-	//pid = fork(); 		//if i allow this , max process per page error will occur
+	// pid = fork(); 		//if i allow this , max process per page error will occur
 	if (pid || !pid)
 	{
 		for (i=0;i<n;i++)
 		{
 			*key += i+2;
 			addr[i] = shmget(key);
-			addr[i][0] = 'a';
+			//addr[i][0] = 'a';			//compiler complaining when i comment printf
 			printf(1,"%d-%x , key:%s\n",i,(unsigned int) addr[i],key);
 			sleep(5);
 		}
